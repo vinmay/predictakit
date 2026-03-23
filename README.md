@@ -26,6 +26,9 @@ Point it at historical match data (football, cricket, basketball), and it predic
 - No sklearn, PyTorch, or TensorFlow in the engine. NumPy only.
 - Every prediction must be explainable.
 - I write every algorithm. AI helps with scaffolding and tests, not the math.
+
+## Sources
+https://www.football-data.co.uk/englandm.php
  
 ## License
  

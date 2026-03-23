@@ -95,3 +95,80 @@ Predicting goal difference, the model learned: home goals matter a lot (positive
 Start with the dot product. Seriously. Implement it with a loop. Once you feel every multiplication and addition, everything else builds on top of it. Matrix multiplication is just batch dot products. Predictions are just dot products with weights. Gradient descent is just adjusting the weights so the dot products give better answers.
 
 The math is not the hard part, its the WHY that is critical and hard to understand. Once you understand why you are doing a certain mathematical operation, its easier to know how you are thinking like a model thinks.
+
+---
+ 
+### Normal Equation — The Shortcut
+ 
+After building gradient descent (the iterative approach), I learned the normal equation — a closed-form solution that gives the exact best weights in one step:
+ 
+```
+w = (X^T · X)^(-1) · X^T · y
+```
+ 
+No learning rate. No epochs. No loop. One line of NumPy.
+ 
+On the toy data, gradient descent (1000 epochs) gave:
+```
+bias: -0.295, home_goals: 0.789, home_SOT: 0.104, away_goals: -0.954
+```
+ 
+The normal equation gave:
+```
+bias: ≈0, home_goals: 1.0, home_SOT: ≈0, away_goals: -1.0
+```
+ 
+The normal equation found the **perfect** weights instantly. Gradient descent was heading there but hadn't arrived after 1000 iterations — it was still walking downhill. Running gradient descent with more epochs would get closer and closer to the normal equation's answer.
+ 
+**The tradeoff:** normal equation is exact but requires inverting a matrix (expensive for large data). Gradient descent is approximate but scales to any dataset size. For a few thousand football matches, either works.
+ 
+---
+ 
+### Building the LinearRegression Class
+ 
+Wrapped everything into a proper class for PredictaCore with `fit()` and `predict()` methods.
+ 
+**Bugs I hit:**
+ 
+**Forgot `self` on class methods.** Python class methods need `self` as the first parameter — without it they don't know they belong to the instance. Coming from Java this was a moment of "right, Python does this explicitly."
+ 
+**Wasn't storing weights on `self`.** My training methods returned weights but `fit()` wasn't saving them anywhere. `predict()` needs access to the learned weights, so `fit()` has to store them with `self.weights = ...`.
+ 
+**Called the wrong method in the else branch.** Classic copy-paste bug — the gradient descent path was accidentally calling the normal equation method. This is why tests matter.
+ 
+**The `predict()` method was simpler than I expected.** It's literally just the dot product — add the bias column, multiply by weights, return predictions. The same `np.dot(X_b, self.weights)` that already existed inside the training loop. Training finds the weights, predicting uses them. Two sides of the same coin.
+ 
+---
+ 
+### Testing on Real EPL Data
+ 
+Downloaded the EPL 2024-25 season from football-data.co.uk. 380 matches, dozens of columns.
+ 
+**Features and targets:** Picked 6 features — home shots, away shots, home/away shots on target, home/away corners. Target was goal difference (FTHG - FTAG).
+ 
+**Learned about Pandas gotcha:** Accidentally wrote `[df['FTHG']]` with square brackets, which wrapped the Series in a list and created a DataFrame instead of a 1D array. The subtraction then broadcast into a 380×380 matrix instead of a 380-length vector. Small syntax difference, completely different result. The fix was just removing the brackets: `df['FTHG'] - df['FTAG']`.
+ 
+**Train/test split:** Used the first 300 matches for training, last 80 for testing. Didn't shuffle — football matches are time-ordered, and in reality you train on the past and predict the future. Shuffling would let future matches leak into training data, which is cheating.
+ 
+**Results:**
+```
+Train MSE: 2.06
+Test MSE:  1.79
+```
+ 
+Test MSE was actually lower than training MSE. With only 6 features and a linear model, there's not enough complexity to overfit. The model is learning real patterns, not memorizing noise. The last 80 matches (end of season) may also be more predictable since teams have settled into form.
+ 
+**Putting MSE in perspective:** MSE of ~2.0 means predictions are off by about √2 ≈ 1.4 goals on average. Not amazing, but it's a first model with basic features and zero feature engineering. It'll improve with better features and ensemble methods in later phases.
+ 
+---
+ 
+### Phase 1 Complete — What I Can Now Explain in an Interview
+ 
+- What a dot product computes and why it's the core operation of ML
+- Linear regression using both the normal equation and gradient descent
+- Why gradient descent exists when we have a closed-form solution (scale)
+- What MSE measures and why squaring matters
+- What a gradient is and how it tells each weight which direction to move
+- The effect of learning rate — too high explodes, too low stalls
+- Train/test splits — why you test on unseen data, why you don't shuffle time series
+- The bias term trick — adding a column of 1s to handle the y-intercept
