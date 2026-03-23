@@ -15,7 +15,7 @@ Point it at historical match data (football, cricket, basketball), and it predic
 ## Where I am
  
 - [x] Project setup
-- [ ] Linear regression from scratch
+- [x] Linear regression from scratch
 - [ ] Logistic regression from scratch
 - [ ] Decision trees from scratch
 - [ ] Ensemble + explanation engine
