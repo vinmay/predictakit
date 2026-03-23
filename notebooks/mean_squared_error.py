@@ -14,7 +14,7 @@ def mse(predictions, actual):
 
 predictions = [1.34, -0.05, 3.23, 0.80, 2.10]
 actual = [1, 0, 3, 1, 2]
-#print(mse(predictions, actual))  # should be approximately 0.0442
+print(mse(predictions, actual))  # should be approximately 0.0442
 
 """
 Models care about big errors dispropotianately, if there is a huge error of say 5 that happens sometimes but 
@@ -23,6 +23,6 @@ if there is an error of 0.5 that happens often, still the one that happens rarel
 When there is an error found using mse, it does not tell the model to recheck the weights in any way, it tells 
 the model which direction to adjust the weights in and by how much. If loss goes down after the adjustment, it 
 went the right way and if goes up, it went the wrong way. This process of adjustment is done using 
-GRADIENT DESCENT.
+GRADIENT DESCENT
 
 """
